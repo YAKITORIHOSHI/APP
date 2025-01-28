@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">PackSmart</string>
+    <string name="textview">FETCHING…</string>
+</resources>
