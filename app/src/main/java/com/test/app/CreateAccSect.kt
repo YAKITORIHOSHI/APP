@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -19,6 +20,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -29,8 +31,10 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -79,23 +83,21 @@ fun CreateAccount(onBackToLogin: () -> Unit, auth: FirebaseAuth) {
                     isLoading = false
                 }
                 else -> {
-                    registerUser(email, password, auth) { success, message ->
+                    registerAndVerifyUser(email, password, auth) { success, message ->
                         if (success) {
-
+                            // After registration is successful, handle the other parts like user data saving
                             val userUID = auth.currentUser?.uid
                             if (userUID == null) {
                                 Toast.makeText(context, "Error: User UID is null.", Toast.LENGTH_SHORT).show()
                                 isLoading = false
-                                return@registerUser
+                                return@registerAndVerifyUser
                             }
 
-                            val userDataRef = firestore
-                                .collection("packsmartDBS")
+                            val userDataRef = firestore.collection("packsmartDBS")
                                 .document("users")
                                 .collection("regAccounts")
 
-                            val userDataVerif = firestore
-                                .collection("packsmartDBS")
+                            val userDataVerif = firestore.collection("packsmartDBS")
                                 .document("users")
                                 .collection("regAccounts")
                                 .document(username)
@@ -116,9 +118,9 @@ fun CreateAccount(onBackToLogin: () -> Unit, auth: FirebaseAuth) {
                                 .addOnSuccessListener {
                                     userDataVerif.set(userDataAuth)
                                         .addOnSuccessListener { success ->
-                                            Toast.makeText(context, "Account created successfully!", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Account created successfully! Please verify your email.", Toast.LENGTH_SHORT).show()
                                             isLoading = false
-                                            onBackToLogin()
+                                            onBackToLogin() // Optional: you may want to go back to login after registration
                                         }
                                         .addOnFailureListener { exception ->
                                             Toast.makeText(context, "Error saving user data: ${exception.message}", Toast.LENGTH_SHORT).show()
@@ -248,20 +250,39 @@ fun CreateAccount(onBackToLogin: () -> Unit, auth: FirebaseAuth) {
                     modifier = Modifier.fillMaxSize()
                 ) {
                     GradientButton(
-                        text = "Create Account",
+                        text = {
+                            Text(
+                                "Create Account",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                        },
                         onClick = { executeChanges() },
                         modifier = Modifier
-                            .width(300.dp)
-                            .height(50.dp)
+                            .offset(x = 3.dp, y = 5.dp)
+                            .width(250.dp)
+                            .height(50.dp),
+                        enabled = true
                     )
 
                     GradientButton(
-                        text = "Back to Login",
+                        text = {
+                            Text(
+                                "Back to Login",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                        },
                         onClick = { onBackToLogin() },
                         modifier = Modifier
-                            .width(300.dp)
-                            .height(50.dp)
+                            .offset(x = 3.dp, y = 5.dp)
+                            .width(250.dp)
+                            .height(50.dp),
+                        enabled = true
                     )
+
                 }
             }
 

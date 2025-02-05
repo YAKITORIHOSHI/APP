@@ -4,6 +4,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
@@ -20,15 +21,30 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun LoginBgs(w: Int, h: Int) {
+fun LoginBgs(h: Int) {
+
+    var newH = h
+
+    if (GlobalVar.glob_Nav == true) {
+        if (h > 915) {
+            newH -= 75
+        } else {
+            newH += 25
+        }
+    } else {
+        if (h > 915) {
+            newH -= 60
+        } else {
+            newH += 20
+        }
+    }
 
     Box(
         modifier = Modifier
             .offset(
-                x = 0.dp,
-                y = (-15).dp
+                y = 0.dp
             )
-            .width(w.dp)
+            .fillMaxWidth()
             .height(600.dp)
             .clip(RoundedCornerShape(15.dp))
             .background(Color(0xFFE8E8E8))
@@ -36,10 +52,9 @@ fun LoginBgs(w: Int, h: Int) {
 
     Box(modifier = Modifier
         .offset(
-            x = 0.dp,
             y = (-15).dp
         )
-        .width(w.dp)
+        .fillMaxWidth()
         .height(75.dp)
         .clip(RoundedCornerShape(20.dp))
         .background(
@@ -49,18 +64,6 @@ fun LoginBgs(w: Int, h: Int) {
                 end = Offset(0f, 0f) // Left
             )
         )
-    )
-
-    Box(
-        modifier = Modifier
-            .offset(
-                x = 0.dp,
-                y = (h + 15).dp
-            )
-            .width(w.dp)
-            .height(50.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(Color(0xFFE8E8E8))
     )
 
 }
@@ -126,4 +129,80 @@ fun LblImg(pngs: Int, phonex: Int, phoney: Int) {
                 .align(Alignment.Center)  // Center the image horizontally and vertically
         )
     }
+}
+
+@Composable
+fun OptnImg (pngs: Int) {
+
+    val background: Painter = painterResource(pngs)
+
+    Box(modifier = Modifier
+        .fillMaxSize()
+    ) {
+        Image(
+            painter =  background,
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()  // Make the image fill the box
+                .align(Alignment.Center)  // Center the image horizontally and vertically
+        )
+    }
+
+}
+
+@Composable
+fun LogoImg (pngs: Int) {
+
+    val background: Painter = painterResource(pngs)
+
+    Box(modifier = Modifier
+        .fillMaxSize()
+    ) {
+        Image(
+            painter =  background,
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()  // Make the image fill the box
+                .align(Alignment.Center)  // Center the image horizontally and vertically
+        )
+    }
+
+}
+
+@Composable
+fun BrdImg (pngs: Int) {
+
+    val background: Painter = painterResource(pngs)
+
+    Box(modifier = Modifier
+        .fillMaxSize()
+    ) {
+        Image(
+            painter =  background,
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()  // Make the image fill the box
+                .align(Alignment.Center)  // Center the image horizontally and vertically
+        )
+    }
+
+}
+
+@Composable
+fun DpImg (pngs: Int) {
+
+    val background: Painter = painterResource(pngs)
+
+    Box(modifier = Modifier
+        .fillMaxSize()
+    ) {
+        Image(
+            painter =  background,
+            contentDescription = null,
+            modifier = Modifier
+                .fillMaxSize()  // Make the image fill the box
+                .align(Alignment.Center)  // Center the image horizontally and vertically
+        )
+    }
+
 }

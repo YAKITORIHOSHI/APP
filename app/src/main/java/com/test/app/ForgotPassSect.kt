@@ -1,30 +1,13 @@
 package com.test.app
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
@@ -34,57 +17,72 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
 fun ForgotPassword(onBackToLogin: () -> Unit) {
-
     val context = LocalContext.current
     val firestore = FirebaseFirestore.getInstance()
+    val auth = FirebaseAuth.getInstance()
 
-    // State for email input and error message
     var email by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
     val focusManager = LocalFocusManager.current
 
-    fun executeChanges() {
+    var isValidEmail by remember { mutableStateOf(false) }
+    var isValidLenUsern by remember { mutableStateOf(false) }
 
+    fun executeChanges() {
         if (!isInternetAvailable(context)) {
             Toast.makeText(context, "Internet not available. Please check your connection.", Toast.LENGTH_SHORT).show()
             return
         }
 
         if (username.isNotEmpty() && email.isNotEmpty()) {
-            val usersCollectionRef = firestore.collection("users")
+            val userDataRef = firestore.collection("packsmartDBS")
+                .document("users")
+                .collection("regAccounts")
+                .document(username)
 
-            usersCollectionRef.document(username).get().addOnSuccessListener { usernameDoc ->
-                val storedUsername = usernameDoc.getString("username")
-                val storedEmail = usernameDoc.getString("email")
+            userDataRef.get().addOnSuccessListener { onSuccess ->
+                val storedUserID = onSuccess.getString("uid") ?: ""
+                val storedUsername = onSuccess.getString("username") ?: ""
 
-                if (storedUsername == username && storedEmail == email) {
-                    // Create or update the "password" document
-                    val passwordData: Map<String, Any> = hashMapOf(
-                        "password" to "0000" // Replace "0000" with the new password value
-                    )
+                if (storedUserID.isNotEmpty()) {
+                    val userVerifyRef = firestore.collection("packsmartDBS")
+                        .document("users")
+                        .collection("regAccounts")
+                        .document(storedUsername)
+                        .collection("verificationData")
+                        .document(storedUserID)
 
-                    firestore.collection("users").document(username).update(passwordData)
-                        .addOnSuccessListener {
-                            Toast.makeText(context, "Password updated successfully!", Toast.LENGTH_SHORT).show()
-                            onBackToLogin() // Ensure this is only called after success
+                    userVerifyRef.get().addOnSuccessListener { verificationData ->
+                        val storedEmail = verificationData.getString("email") ?: ""
+
+                        if (email == storedEmail) {
+                            auth.sendPasswordResetEmail(storedEmail)
+                                .addOnCompleteListener { task ->
+                                    if (task.isSuccessful) {
+                                        Toast.makeText(context, "Password reset email sent to $email", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        val error = task.exception?.message ?: "Failed to send reset email."
+                                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+                                    }
+                                    onBackToLogin()
+                                }
+                        } else {
+                            Toast.makeText(context, "Email does not match the registered email.", Toast.LENGTH_SHORT).show()
                         }
-                        .addOnFailureListener { exception ->
-                            Toast.makeText(context, "Error updating password: ${exception.message}", Toast.LENGTH_SHORT).show()
-                        }
+                    }
                 } else {
-                    Toast.makeText(context, "Username or email does not match our records.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "User not found.", Toast.LENGTH_SHORT).show()
                 }
-            }.addOnFailureListener { exception ->
-                Toast.makeText(context, "Error fetching Account Info: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
         } else {
-            Toast.makeText(context, "Both textfields must be filled.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Both text fields must be filled.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -97,18 +95,20 @@ fun ForgotPassword(onBackToLogin: () -> Unit) {
         ForgotBackgroundImage()
 
         Column(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
             Spacer(modifier = Modifier.height(75.dp))
 
-            // EMail TextField
+            // Email Input
             TextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = {
+                    email = it
+                    isValidEmail = checkEmail(email) // Validate on input change
+                },
                 label = { Text("Email") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -124,13 +124,17 @@ fun ForgotPassword(onBackToLogin: () -> Unit) {
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
-                )
+                ),
+                isError = !isValidEmail // Show error state if invalid
             )
 
-            // Username TextField
+            // Username Input
             TextField(
                 value = username,
-                onValueChange = { username = it },
+                onValueChange = {
+                    username = it
+                    isValidLenUsern = validLength(email) // Validate on input change
+                },
                 label = { Text("Username") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -146,10 +150,10 @@ fun ForgotPassword(onBackToLogin: () -> Unit) {
                 colors = TextFieldDefaults.colors(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
-                )
+                ),
+                isError = !isValidLenUsern // Show error state if invalid
             )
 
-            // Display error message if email doesn't match
             if (errorMessage.isNotEmpty()) {
                 Text(
                     text = errorMessage,
@@ -160,35 +164,50 @@ fun ForgotPassword(onBackToLogin: () -> Unit) {
             }
 
             Box(
-                modifier = Modifier
-                    .width(300.dp)
-                    .height(150.dp) // Adjusted height to fit both buttons
-                    .padding(top = 10.dp)
+                modifier = Modifier.width(300.dp).height(150.dp).padding(top = 10.dp)
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(20.dp), // Add spacing between buttons
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxSize()
                 ) {
+
                     GradientButton(
-                        text = "Reset Password",
+                        text = {
+                            Text(
+                                "Reset Password",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                        },
                         onClick = { executeChanges() },
                         modifier = Modifier
+                            .offset(x = 3.dp, y = 5.dp)
                             .width(300.dp)
-                            .height(50.dp)
+                            .height(50.dp),
+                        enabled = true
                     )
 
                     GradientButton(
-                        text = "Back to Login",
+                        text = {
+                            Text(
+                                "Back to Login",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 20.sp
+                            )
+                        },
                         onClick = { onBackToLogin() },
                         modifier = Modifier
+                            .offset(x = 3.dp, y = 5.dp)
                             .width(300.dp)
-                            .height(50.dp)
+                            .height(50.dp),
+                        enabled = true
                     )
+
                 }
             }
-
-
         }
     }
 }

@@ -13,8 +13,8 @@ android {
         applicationId = "com.test.app"
         minSdk = 29
         targetSdk = 35
-        versionCode = 3
-        versionName = "2.1.0"
+        versionCode = 8
+        versionName = "5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -31,7 +31,7 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file("C:\\Users\\napht\\AndroidStudioProjects\\APP\\app\\release\\naphskrt.jks")  // Path to your keystore file
+            storeFile = file("release/naphskrt.jks") // Path to your keystore file
             storePassword = "Naphtali_124"     // Keystore password
             keyAlias = "key042303"                  // Key alias
             keyPassword = "Naphtali_124"            // Key password
@@ -83,6 +83,7 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
+    implementation(libs.google.firebase.firestore)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -112,6 +113,7 @@ dependencies {
     implementation(libs.jackson.core)
     implementation(libs.jackson.databind.v2182)
     implementation(libs.jackson.annotations)
+    implementation(libs.sendgrid.java)
 
     // Unit Testing
     testImplementation(libs.junit)

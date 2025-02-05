@@ -53,6 +53,7 @@ firebaseFirestore = "25.1.1"
 firebaseAuth = "23.1.0"
 firebaseAuthVersion = "23.1.0"
 gridlayout = "1.0.0"
+sendgridJava = "4.7.0"
 ui = "1.7.6"
 
 [libraries]
@@ -118,6 +119,7 @@ firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore
 firebase-auth = { group = "com.google.firebase", name = "firebase-auth-ktx", version.ref = "firebaseAuth" }
 google-firebase-auth = { group = "com.google.firebase", name = "firebase-auth", version.ref = "firebaseAuthVersion" }
 androidx-gridlayout = { group = "androidx.gridlayout", name = "gridlayout", version.ref = "gridlayout" }
+sendgrid-java = { module = "com.sendgrid:sendgrid-java", version.ref = "sendgridJava" }
 ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 
 [plugins]
